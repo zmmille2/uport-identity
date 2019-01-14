@@ -1,0 +1,24 @@
+@startuml
+
+title SupplyChainSequence
+
+Restaurant->Catalog: Make a product(s) request
+Catalog->Farmer: Make request for products(s)
+Farmer->Catalog: Looks at registry and accepts orders
+loop For Each Restaurnt Order
+    Catalog->Farmer: Initializes order to Farmer
+    Farmer->Blockchain: Accepts request, initialize shipment
+    Blockchain->"Notification Oracle": Read pending shipments
+    "Notification Oracle"->Distributor: Notify of pending shipment
+    Farmer->Blockchain: Mark shipment ready
+    "Notification Oracle"->Distributor: Notify of ready shipment
+    Distributor->Blockchain: Acknowledge shipment
+    Distributor->Farmer: Picks up shipment
+    Farmer->Blockchain: Confirms acceptance of shipment
+    "Notification Oracle"->Restaurant: Notify of shipment
+    Distributor->Restaurant: Delivers shipment
+    Distributor->Blockchain: Marks Delivered
+    Restaurant->Blockchain: Acknowledges receipt
+end
+
+@enduml

@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supply Chain Template Flow</title>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <div data-role="page">
+        <div data-role="header">
+            <h1>Supply Chains</h1>
+        </div>
+
+        <div data-role="content" id="login" style="display: none;text-align: center">
+            <div data-role="header">
+                <h2>Login</h2>
+                <p>- Please login with your mobile app -</p>
+            </div>
+            <img src="./fruits.jpg" width=500>
+            <br>
+            <a href="" id="login-link" style="border-style: none">
+                <img src="" alt="Login QR" class="photo qr" id="login-qr">
+            </a>
+        </div>
+
+        <div data-role="content" id="actionsMenu" style="display: none;text-align: center">
+            <div data-role="header">
+                <h2>What would you like to do?</h2>
+                <div>
+                    <button onclick="displayCreatePackage()">Create new package</button>
+                    <button onclick="displaySeePackageList()">See list of packages</button>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="content" id="RequestOwnership" style="display: none">
+            <div>
+                <button onclick="RequestOwnership()">Request Transfer</button>
+            </div>
+        </div>
+
+        <div data-role="content" id="showPackageList" style="display: none">
+            <div>
+                <button onclick="createNewPackage()">Packages List</button>
+            </div>
+            <ul id="listView" data-role="listview" data-inset="true">
+            </ul>
+            <button class="ui-btn" onclick="displayActionMenu()">Back to Menu</button>
+        </div>
+
+
+        <div data-role="content" id="newPackage" style="display: none">
+            <form name='newPackage_form'>
+                <table>
+                    <tr>
+                        <td>Product Id</td>
+                        <td>
+                            <input id='productId' name='product Id' value='Cucumber' type='text'>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Count</td>
+                        <td>
+                            <input id='count' name='count' type='text'>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <button class="ui-btn" onclick="newPackage()">Create Package</button>
+            <button class="ui-btn" onclick="displayActionMenu()">Cancel</button>
+
+        </div>
+
+        <div data-role="content" id="transPackage" style="display: none">
+            <div data-role="header">
+                <h2>Do you want to transfer this package to you?</h2>
+            </div>
+            <ul id="packageContent" data-role="listview" data-inset="true">
+            </ul>
+            <button class="ui-btn" onclick="RequestOwnership()">Transfer Package</button>
+            <button class="ui-btn" onclick="displayActionMenu()">Main Menu</button>
+        </div>
+
+        <div data-role="content" id="transfer" style="display: none;text-align: center">
+            <div data-role="header">
+                <h2>Please scan to transfer ownership </h2>
+            </div>
+            <a href="" id="login-link" style="border-style: none">
+                <img src="" alt="Login QR" class="photo qr" id="transfer-qr">
+            </a>
+            <button class="ui-btn" onclick="displayActionMenu()">Main Menu</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script>
+        const serverUrl = "";
+        const properties = {};
+
+        function displayActionMenu() {
+            $('div[data-role="content"]').hide();
+            $('#actionsMenu').show();
+        }
+
+        function displayCreatePackage() {
+            $('div[data-role="content"]').hide();
+            $('#newPackage').show();
+        }
+
+        function displaySeePackageList() {
+            $('div[data-role="content"]').hide();
+            $('#showPackageList').show();
+            showPackages()
+        }
+
+        function displayTransferPackage(pkgid) {
+            $('div[data-role="content"]').hide();
+            $('#transPackage').show();
+            showTransferPackage(pkgid);
+        }
+
+
+        function endInput() {
+            $('#actions').hide();
+            $('#RequestOwnership').show();
+        }
+
+        function monitorTx() {
+            $.ajax({
+                type: "POST",
+                headers: {
+                    Authorization: properties.access_token
+                },
+                url: serverUrl + "monitorTxQueue",
+                statusCode: {
+                    200: function () {
+                        setTimeout(() => monitorTx(), 3000);
+                    }
+                }
+            });
+        };
+
+        function createNewPackage() {
+            $("#actions").hide();
+            $('#newPackage').show();
+        }
+
+        function RequestOwnership() {
+            $.ajax({
+                method: "GET",
+                dataType: "image/svg",
+                url: serverUrl + "transfer-qr/" + properties.currentPackage,
+                headers: {
+                    Authorization: properties.access_token
+                },
+                statusCode: {
+                    200: function (data) {
+                        const xmlImg = btoa(data.responseText);
+                        $("#transfer-qr").attr("src", "data:image/svg+xml;base64," + xmlImg);
+                        $('div[data-role="content"]').hide();
+                        $('#transfer').show();
+                    }
+                }
+            })
+        }
+
+        function AcceptTransferOwner() {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                headers: {
+                    Authorization: properties.access_token
+                },
+                url: serverUrl + "AcceptTransferOwner"
+            });
+        }
+
+        function displayActions() {
+            $('#login').hide();
+            $('#newPackage').hide();
+            $('RequestOwnership').show();
+            showPackages();
+        }
+
+        function newPackage() {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    product_id: $("#productId").val(),
+                    count: $("#count").val()
+                }),
+                headers: {
+                    Authorization: properties.access_token
+                },
+                url: serverUrl + "newPackage"
+            });
+            displayActionMenu();
+            monitorTx();
+        }
+
+        function getWithAuth(uri, func) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    Authorization: properties.access_token
+                },
+                success: func,
+                url: serverUrl + uri
+            })
+        };
+
+        function showPackages() {
+            const listView = $("#listView");
+            listView.empty();
+            getWithAuth('listPackages', (data) => {
+                for (const index in data) {
+                    const pkg = data[index];
+                    const item = '<li onclick="displayTransferPackage(\'' + pkg.packageId +
+                        '\');" class="ui-btn">' +
+                        '<a href="#">' +
+                        '    <h2>' + pkg.packageId + '</h2>' +
+                        '    <p>' + pkg.productId + '</p>' +
+                        '    <p class="ui-li-aside">' + pkg.currentOwner + '</p>' +
+                        '</a>' +
+                        '</li>'
+                    listView.append(item);
+                }
+                listView.listview("refresh");
+
+            });
+            monitorTx();
+        }
+
+        function showTransferPackage(pkgid) {
+            const listView = $("#packageContent");
+            listView.empty();
+            getWithAuth('getPackageInfo/' + pkgid, (data) => {
+                properties.currentPackage = data.packageId;
+                const item = '<li><label> Current Package Id <input type="text" value="' + data.packageId +
+                    '"></label></li>' +
+                    '<li><label> Product Id <input type="text" value="' + data.productId +
+                    '"></label></li>' +
+                    '<li><label> Count <input type="text" value="' + data.count +
+                    '"></label></li>' +
+                    '<li><label> CurrentOwner <input type="text" value="' + data.currentOwner +
+                    '"></label></li>' +
+                    '<li><label> State <input type="text" value="' + data.state + '"></label></li>';
+                listView.append(item);
+                listView.listview("refresh");
+            });
+        }
+
+        // TODO just copy and paste
+        function transferPackage(pkgid) {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                data: JSON.stringify({
+                    product_id: pkgid
+                }),
+                headers: {
+                    Authorization: properties.access_token
+                },
+                url: serverUrl + "transferPackage"
+            });
+        }
+
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+            var expires = "expires=" + d.toUTCString();
+            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var decodedCookie = decodeURIComponent(document.cookie);
+            var ca = decodedCookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+
+        function probeAuth() {
+            function hideLogin() {
+                $('div[data-role="content"]').hide();
+                displayActionMenu();
+                // showPackages();
+                // $('#actions').show();
+            }
+
+            var jqxhr = $.ajax({
+                    method: "GET",
+                    dataType: "json",
+                    url: serverUrl + "login-status",
+                    headers: {
+                        Authorization: properties.access_token
+                    },
+                    statusCode: {
+                        304: function () {
+                            setTimeout(() => probeAuth(), 3000);
+                        },
+                        200: function (data) {
+                            properties.access_token = 'Bearer ' + data.access_token;
+                            setCookie('Authorization', properties.access_token, 1);
+                            displayActionMenu();
+                        },
+                        204: function () {
+                            setTimeout(() => probeAuth(), 3000);
+                        }
+                    }
+                })
+                .fail(function () {
+                    setTimeout(() => probeAuth(id, etag), 3000);
+                });
+        }
+
+        $(document).ready(() => {
+            const authToken = getCookie('Authorization');
+            var jqxhr = $.ajax({
+                method: "GET",
+                dataType: "json",
+                url: serverUrl + "verify-token",
+                headers: {
+                    Authorization: authToken
+                },
+                statusCode: {
+                    201: function (data) {
+                        properties.access_token = 'Bearer ' + data.login_token;
+                        setCookie('Authorization', properties.access_token, 1);
+                        displayLogin(data.login_uri);
+                    },
+                    200: function (data) {
+                        properties.access_token = 'Bearer ' + data.access_token;
+                        setCookie('Authorization', properties.access_token, 1);
+                        displayActionMenu();
+                    }
+                }
+            });
+        });
+
+        function displayLogin(loginUri) {
+            $("#login-link").attr("href", loginUri);
+            $.ajax({
+                method: "GET",
+                dataType: "image/svg",
+                url: serverUrl + "login-qr",
+                headers: {
+                    Authorization: properties.access_token
+                },
+                statusCode: {
+                    200: function (data) {
+                        const xmlImg = btoa(data.responseText);
+                        $("#login-qr").attr("src", "data:image/svg+xml;base64," + xmlImg);
+                        $("#login").show();
+                        $('RequestOwnership').show();
+                        setTimeout(() => probeAuth(), 3000);
+                    }
+                }
+
+            });
+        }
+    </script>
+</body>
+
+</html>

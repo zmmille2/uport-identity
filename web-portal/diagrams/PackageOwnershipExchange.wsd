@@ -1,0 +1,49 @@
+@startuml
+
+title Package Ownership Exchange
+
+participant UserA
+participant UserB
+participant UPortMobileA
+participant UPortMobileB
+participant WebBrowser
+participant WebService
+
+UserA->WebBrowser: List Packages
+WebBrowser->WebService: GET /listPackages
+WebService->WebService: Validate JWT
+WebService->DataStore: Query Packages
+WebService->WebBrowser: RESPONSE 200 <packages>
+WebBrowser->UserA: Display packages
+UserA->WebBrowser: Select package
+WebBrowser->UserA: Show details and transfer action
+UserA->WebBrowser: Click transfer action
+WebBrowser->WebService: GET /transfer-qr/{packageId}
+WebService->WebService: Validate JWT
+WebService->DataStore: Query Contract Id for Package include
+WebService->WebService: Generate contract request URI
+note right of WebService: uport.me:${contractId}?Function
+WebService->WebService: Generate QR Code
+WebService->WebBrowser: RESPONSE 200 QR Image
+UserA->UserB: Display QR Code
+UserB->UPortMobileB: Scan QR Code
+UPortMobileB->UserB: Display Approve/Reject UI
+UserB->UPortMobileB: Approve Request
+UPortMobileB->UPortMobileB: Sign Transaction
+UPortMobileB->UPortService: Push signed TX to the network
+UPortService->UPortMobileB: Responsd with TX hash
+UPortMobileB->WebService: POST /TransferRequestCallBack {TX Hash}
+WebService->WebService: Generate UPort contract action request URI
+note right of WebService: me.uport:${contractId}?Function...
+WebService->UPortService: Encrypt and push notification
+UPortService->UPortMobileA: Push notification to device
+UPortMobileA->UserA: Raise notificaton to user
+UserA->UPortMobileA: View notification
+UPortMobileA->UserA: Display action authorization request
+UserA->UPortMobileA: Approve request
+UPortMobileA->UPortMobileA: Sign Transaction
+UPortMobileA->UPortService: Push signed TX to the network
+UPortService->UPortMobileA: Responsd with TX hash
+UPortMobileA->WebService: POST /TransferCompleteCallback {TX Hash}
+
+@enduml

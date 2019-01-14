@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supply Chain Template Flow</title>
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script>
+        const serverUrl = "";
+        const properties = {};
+
+        // ORIGINAL CODE FROM
+        // https://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&#]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        $(document).ready(async function () {
+            const url = window.location.href;
+            const id = getParameterByName('id', url);
+            const etag = getParameterByName('etag', url);
+            const token = getParameterByName('access_token', url);
+
+            const payload = {
+                type: "POST",
+                url: serverUrl + "authorize?etag=" + etag + "&id=" + id,
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({
+                    access_token: token
+                })
+            };
+
+            console.log(JSON.stringify(payload));
+            await $.ajax(payload);
+            await $.ajax({
+                    method: "GET",
+                    dataType: "json",
+                    url: serverUrl + "login-status?id=" + id + "&tag=" + etag,
+                    statusCode: {
+                        200: function (data) {
+                            properties.access_token = data.access_token;
+                            hideLogin();
+                        }
+                    }
+                });
+        });
+    </script>
+</body>
+
+</html>

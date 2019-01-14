@@ -1,0 +1,40 @@
+{
+    "logging": {
+        "ai": ""
+    },
+    "storage": {
+        "implementation": "FileSystem",
+        "root": "./demo",
+        "azure": {
+            "account": "",
+            "key": ""
+        }
+    },
+    "uport" : {
+        "callbackRoot" : "https://ebe0e4e8.ngrok.io",
+        "app": {
+            "name": "Htc Hackfest new app",
+            "id": "2oha91KHAAAxw1hPDmf7Q2vQHscSskVSibh",
+            "secret": "969d23718c64367b7e5b1c0a0dfe2ec95f4adedc6d6d3ab738f7bcdcf1f5a1e1"
+        },
+        "network": "0x4",
+        "contractAddress": "0x9102342f98f466940e85ecb49632e0c18376e2a4"
+    },
+    "azure" : {
+        "instanceId" : null,
+        "websiteName" : ""
+    },
+    "rpcUrl": "http://40.84.155.75:8545",
+    "startingBlock" : "latest",
+    "jwtSecret" : "Default Token Secret",
+    "setup" : {
+        "account": "0x09f61cc23c0930879d7d40850465d41db155e70a",
+        "secret" : "phai9hahThuo7ah",
+        "contract": {
+            "file": "Package.sol",
+            "name": "PackageFactory",
+            "parameters": {
+            }
+        }
+    }
+}

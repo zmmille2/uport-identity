@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Supply Chain Template Flow</title>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+    <div data-role="page">
+        <div data-role="header">
+            <h1>Supply Chains</h1>
+        </div>
+
+        <div data-role="content" id="RequestOwnership" style="text-align: center">
+            <div data-role="header">
+                <h2>Request Ownership</h2>
+                <p><b>- Please show this QR-Code to distributor -</b></p>
+            </div>
+            <br>
+            <img src="./pic1.png">
+            <br>
+            <a href="" id="login-link" style="border-style: none">
+                <img src="" alt="Login QR" class="photo qr" id="login-qr">
+            </a>
+            <a href="/" class="ui-btn">Main Menu</a>
+        </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script>
+        const serverUrl = "";
+        const properties = {};
+
+        function monitorTx() {
+            $.ajax({
+                type: "POST",
+                headers: {
+                    Authorization: 'Bearer ' + properties.access_token
+                },
+                url: serverUrl + "monitorTxQueue"
+            });
+            setTimeout(() => monitorTx(), 3000);
+        };
+
+       
+        function RequestOwnership(){
+
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                headers: {
+                    Authorization: 'Bearer ' + properties.access_token
+                },
+            url: serverUrl + "RequestOwnership"
+            });
+
+}
+
+        function getWithAuth(uri, func) {
+            $.ajax({
+                type: "GET",
+                headers: {
+                    Authorization: 'Bearer ' + properties.access_token
+                },
+                success: func,
+                url: serverUrl + uri
+            });
+        }
+
+        function probeApprove(id, etag) {
+            console.log(id);
+            console.log(etag);
+
+            var jqxhr = $.ajax({
+                    method: "GET",
+                    dataType: "json",
+                    url: serverUrl + "approve-status?id=" + id + "&tag=" + etag,
+                    statusCode: {
+                        304: function () {
+                            setTimeout(() => probeApprove(id, etag), 3000);
+                        },
+                        200: function (data) {
+                            properties.access_token = data.access_token;
+                            displayActions();
+                        },
+                        204: function () {
+                            setTimeout(() => probeApprove(id, etag), 3000);
+                        }
+                    }
+                })
+                .fail(function () {
+                    setTimeout(() => probeApprove(id, etag), 3000);
+                });
+        }
+
+        $.post(serverUrl + "login-init", function (data) {
+            $("#login-link").attr("href", data.requestUri);
+            //$("#login-qr").attr("src", serverUrl + "login-qr?id=" + data.id + "&tag=" + data.tag);
+            $("#login-qr").attr("src", serverUrl + "RequestOwnership?id=" + data.id);
+
+            monitorTx();
+
+            //setTimeout(() => probeApprove(data.id, data.tag), 3000);
+        });
+    </script>
+</body>
+
+</html>

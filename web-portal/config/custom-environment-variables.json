@@ -1,0 +1,36 @@
+{
+    "logging": {
+        "ai": "APPLICATION_INSIGHTS_KEY"
+    },
+    "storage": {
+        "implementation": "STORAGE_IMPLEMENTATION",
+        "root": "STORAGE_ROOT",
+        "azure": {
+            "account": "STORAGE_AZURE_ACCOUNT",
+            "key": "STORAGE_AZURE_ACCOUNT_KEY"
+        }
+    },
+    "serviceBus": {
+        "namespace": "SERVICE_BUS_NAMESPACE",
+        "keyName": "SERVICE_BUS_KEY_NAME",
+        "topic": "SERVICE_BUS_TOPIC",
+        "key": "SERVICE_BUS_KEY"
+    },
+    "rpcUrl": "RPC_URL",
+    "startingBlock": "STARTING_BLOCK",
+    "jwtSecret" : "JSON_WEB_TOKEN_SIGNING_SECRET",
+    "azure" : {
+        "instanceId" : "WEBSITE_INSTANCE_ID",
+        "websiteName" : "WEBSITE_SITE_NAME"
+    },
+    "uport" : {
+        "callbackRoot" : "UPORT_CALLBACK_ROOT",
+        "app": {
+            "name": "UPORT_APP_NAME",
+            "id": "UPORT_APP_ID",
+            "secret": "UPORT_APP_SECRET"
+        },
+        "network": "UPORT_NETWORK",
+        "contractAddress": "UPORT_CONTRACT_ADDRESS"
+    }
+}

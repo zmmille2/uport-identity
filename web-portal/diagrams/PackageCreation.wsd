@@ -1,0 +1,35 @@
+@startuml
+
+title Package Creation
+
+User->WebBrowser: Click New Package
+WebBrowser->User: Display Package Creation UI
+User->WebBrowser: Fill out information and click create
+WebBrowser->WebService: POST /newPackage {JSON Payload}
+WebService->WebService: Validate request JWT
+WebService->DataStore: Read user's UPort JWT
+WebService->WebService: Hash request payload
+WebService->DataStore: Store request payload 
+WebService->WebService: Generate UPort contract action request URI
+note right of WebService: me.uport:${contractId}?Function...
+WebService->UPortService: Encrypt and push notification
+WebService->WebBrowser: Report accepted Request
+UPortService->UPortMobile: Push notification to device
+UPortMobile->User: Raise notificaton to user
+User->UPortMobile: View notification
+UPortMobile->User: Display action authorization request
+User->UPortMobile: Approve request
+UPortMobile->UPortMobile: Sign transaction
+UPortMobile->UPortService: Push signed TX to the network
+UPortService->Ethereum: Peer TX with network
+UPortService->UPortMobile: Respond with TX hash
+UPortMobile->WebService: POST /registerPackage?packageID=<packageId>
+WebService->DataStore: Store and associate TX with original payload
+WebService->DataStore: Queue TX for monitoring
+loop Monitor Pending Transactions 
+    Watcher->DataStore: Read pending TX
+    Watcher->Ethereum: Confirm TX state
+    Watcher->DataStore: Update package with contract address
+end loop
+
+@enduml

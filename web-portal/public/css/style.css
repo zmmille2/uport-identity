@@ -1,0 +1,9 @@
+.photo.qr {
+    max-height: 500px;
+    max-width: 500px;
+}
+
+.btn{
+    z-index: 1;
+
+}

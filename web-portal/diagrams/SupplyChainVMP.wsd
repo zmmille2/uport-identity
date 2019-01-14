@@ -1,0 +1,58 @@
+@startuml
+
+title Supply Chain MVP
+
+participant User
+participant User2
+
+opt User Authentication Model
+    User->"Web Service": Navigates to website.
+    "Web Service"->User: Displays QR Code challenge
+    User->"UPort Mobile *": Scans QR Code
+    "UPort Mobile *"->User: User verifies disclosure claims
+    User->"UPort Mobile *": Approves disclosure
+    "UPort Mobile *"->"Web Service": Posts signed JWT
+end
+
+opt Create Initial Package\Transaction
+    User->"Web Service": Enters information about package
+    "Web Service"->"Web Service": Prepares create TX
+    "Web Service"->"UPort *": Sends transacation request notification
+    "UPort *"->"UPort Mobile *": Rasies transacation notification
+    User->"UPort Mobile *": Verifies, approves and signs TX
+    "UPort Mobile *"->"UPort *": Pushes signed TX
+    "UPort *"->"Ethereum?": Peers TX to network
+    "Ethereum?"->"Ethereum?": TX is mined
+end
+
+opt Register Package with "Web Service"
+    "Oracle Service"->"Ethereum?": Pulls for new transacations
+    "Oracle Service"->"Oracle Service": Identify package TX
+    note left of Datastore
+        Contract Address
+        Current Owner
+        Package Details
+    end note
+    "Oracle Service"->Datastore: Update Package Information
+end
+
+opt Package Ownership Exchange
+    User->"Web Service": List Packages
+    User->"Web Service": Select Package for exchange
+    "Web Service"->"Web Service": Prepares TX for ownership exchage
+    "Web Service"->User: Display QR Code for exchange
+    User->User2: Share's QR Code
+    User2->"UPort Mobile *": Scans QR Code from User
+    "UPort Mobile *"->User2: Verifies transacation information
+    User2->"UPort Mobile *": Approves TX by signing
+    "UPort Mobile *"->"UPort *": Pushes signed TX
+    "UPort *"->"Ethereum?": Peers TX to network
+    "UPort Mobile *"->"Web Service": Notify of pending transfer to User
+    "Web Service"->"UPort *": Sends notification request
+    "UPort *"->"UPort Mobile *": Raises signing notification
+    User->"UPort Mobile *": Approves signing notification
+    "UPort Mobile *"->"UPort *": Pushes signed TX
+    "UPort *"->"Ethereum?": Peers TX to network
+end
+
+@enduml

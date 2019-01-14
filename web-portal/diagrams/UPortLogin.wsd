@@ -1,0 +1,60 @@
+@startuml
+
+title UPort Login UI Flow
+
+participant User
+participant WebBrowser
+participant UPortMobile
+
+User->WebBrowser: Navigate to site
+WebBrowser->WebService: GET /index
+WebBrowser->WebService: GET /login-qr
+note left of WebService
+    A call to endpoint embedded
+    in a QR code has the form
+    /endpoint?token=<auth-token>
+    where <auth-token> is a token
+    associated with this browser
+end note
+WebService->WebService: Generate Uri and QR code
+WebService->DataStore: Store {Id, Tag, Pending}
+note right of WebService
+    JWT = 
+    {
+        Claims : [ 'name', 'id', 'avatar', 'etc..'],
+        CallbackUrl: 'https://webservice/authorize
+    }
+    me.uport:me?requestToken={JWT Token}
+end note
+WebService->WebBrowser: RESPONSE GET /login-qr
+note right of WebBrowser
+    Begin check for
+    authorization loop
+end note
+User->UPortMobile: Scan QR code
+UPortMobile->User: Display Approve/Reject dialog
+User->UPortMobile: Approve request
+note left of UPortMobile
+    Authorization for browser
+    session to act on user's behalf
+end note
+UPortMobile->UPortMobile: Generate JWT
+note right of UPortMobile: JWT claims {Name, id, etc.}
+UPortMobile->WebService: POST /authorize?id&tag JWT
+WebService->DataStore: Update {Id, Tag, Token }
+
+loop Check for authorization
+    WebBrowser->WebService: GET /authorized?id&tag
+    WebService->DataStore: Read {Id, Tag, Token}
+    alt Pending
+        WebService->WebBrowser: RESPONSE GET /authorized 204
+    else Token Exists
+        WebService->WebService: Generate JWT {id, name}
+        WebService->WebBrowser: RESPONSE GET /authorized 200 JWT
+    end
+end
+
+WebBrowser->WebBrowser: Hide QR Code
+WebBrowser->WebBrowser: Display Action UI
+
+@enduml
